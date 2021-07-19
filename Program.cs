@@ -14,7 +14,9 @@ namespace ConcurrencyProgramme
             //ManualResetEventSlimTest.Demo();
             //await TaskCompletionSourceTest.Demo();
             //await RateLimiter.UseParallel();
-            await RateLimiter.UseSemaphoreSlim();
+            //await RateLimiter.UseSemaphoreSlim();
+            //await ConcurrentExclusiveSchedulerPairTest.TaskRateLimiter();
+            await ConcurrentExclusiveSchedulerPairTest.ReaderWriter();
 
             Console.WriteLine("end at" + DateTime.Now);
         }
