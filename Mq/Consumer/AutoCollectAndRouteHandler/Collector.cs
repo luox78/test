@@ -1,16 +1,16 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Shared;
 
-namespace Consumer.AutoCollectAndRouteHandler
+namespace Consumer
 {
-    public class MessageBootstrap
+    public partial class DemoConsumer
     {
-        public List<string> CollectAllRoutekey()
+        static string[] CollectAllRoutekey()
         {
             var allTypes = Assembly.GetExecutingAssembly().GetTypes();
-            var result = new List<string>();
+            var result   = new List<string>();
             foreach (var type in allTypes)
             {
                 if (typeof(IMessageHandler<>).IsAssignableFrom(type))
@@ -20,7 +20,9 @@ namespace Consumer.AutoCollectAndRouteHandler
                 }
             }
 
-            return result.Distinct().ToList();
+            return result.Distinct().ToArray();
         }
+
+        public string[] FetchTopics => CollectAllRoutekey();
     }
 }
