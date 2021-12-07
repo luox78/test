@@ -7,16 +7,19 @@ namespace Consumer
 {
     public partial class DemoConsumer
     {
-        static string[] CollectAllRoutekey()
+        string[] CollectAllRoutekey()
         {
             var allTypes = Assembly.GetExecutingAssembly().GetTypes();
             var result   = new List<string>();
             foreach (var type in allTypes)
             {
-                if (typeof(IMessageHandler<>).IsAssignableFrom(type))
+                var typeInfo = type.GetTypeInfo();
+                if (typeInfo.IsClass && typeInfo.GetInterfaces()
+                        .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IMessageHandler<>)))
                 {
-                    var messageType = type.GenericTypeArguments[0];
+                    var messageType = type.GetTypeInfo().GetInterfaces().First().GetGenericArguments()[0];
                     result.Add(messageType.ToString());
+                    _types.Add(messageType.ToString(), messageType);
                 }
             }
 

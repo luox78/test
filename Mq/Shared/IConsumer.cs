@@ -17,6 +17,8 @@ namespace Shared
 
         void Reject(object sender);
 
-        event EventHandler<byte[]> OnMessageReceived;
+        event EventHandler<TransportMessage> OnMessageReceived;
+
+        Type GetType(string topic);
     }
 }

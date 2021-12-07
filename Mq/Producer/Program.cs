@@ -14,22 +14,35 @@ namespace Producer
     {
         public static async Task Main(string[] args)
         {
-            var message = new CreateOrderEvent() {OrderId = "orderid"};
+            var message = new CreateOrderEvent() { OrderId = "orderid" };
             BasicProducer.Product(message);
 
             var services = new ServiceCollection();
-            services.AddProducer();
+
+            services.AddSingleton<IProducer, DemoProducer>();
+            services.AddSingleton<Pipeline<TransportMessage, Task<MessageSentResult>>>();
+            services.AddSingleton<IPipelineHandler<TransportMessage, Task<MessageSentResult>>, SendMessaageHandler>();
+            services.AddSingleton<IPipelineHandler<TransportMessage, Task<MessageSentResult>>, SerializeBodyHandler>();
 
             var serviceProvider = services.BuildServiceProvider();
 
             var sendPipeline = serviceProvider.GetService<Pipeline<TransportMessage, Task<MessageSentResult>>>();
-            var sendFunc = sendPipeline.CreateHandler((_, _) => null);
+            var sendFunc     = sendPipeline.CreateHandler((_, _) => null);
 
-            var result = await sendFunc.Invoke(new TransportMessage()
+            while (true)
             {
-                Message = new CreateOrderEvent() { OrderId = "OrderId" }
-            }, CancellationToken.None);
-            Console.WriteLine(result.Success);
+                Console.WriteLine("输入订单号，发送mq");
+
+                var orderId = Console.ReadLine();
+                var result = await sendFunc.Invoke(new TransportMessage()
+                {
+                    Message = new CreateOrderEvent() { OrderId = orderId, Key = orderId },
+                    Topic   = typeof(CreateOrderEvent).FullName
+                }, CancellationToken.None);
+
+                Console.WriteLine(result.Success);
+
+            }
         }
     }
 }

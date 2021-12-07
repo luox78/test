@@ -22,7 +22,9 @@ namespace Producer
         {
             try
             {
-                await _producer.SendAsync(request.Features.Get<SerializeFeature>().Serialized);
+                request.BodyBytes = request.Features.Get<SerializeFeature>().Serialized;
+
+                await _producer.SendAsync(request);
                 return new MessageSentResult() { Success = true };
             }
             catch (Exception e)

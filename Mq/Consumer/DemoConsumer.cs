@@ -13,10 +13,12 @@ namespace Consumer
         public static string QueueName = "OrderWorker";
 
         private readonly IModel _channel;
+        private readonly Dictionary<string, Type> _types = new();
 
-        public DemoConsumer(IConnectionFactory connectionFactory)
+        public DemoConsumer()
         {
-            using var connection = connectionFactory.CreateConnection();
+            var factory    = new ConnectionFactory() { HostName = "localhost", Port = 50000 };
+            var connection = factory.CreateConnection();
             _channel = connection.CreateModel();
         }
 
@@ -33,13 +35,10 @@ namespace Consumer
             var consumer = new EventingBasicConsumer(_channel);
             consumer.Received += OnConsumerReceived;
 
-            _channel.BasicConsume(QueueName, false, consumer);
+            _channel.ExchangeDeclare(exchange: Exchange, type: "topic");
+            _channel.QueueDeclare(QueueName);
 
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                cancellationToken.WaitHandle.WaitOne(timeout);
-            }
+            _channel.BasicConsume(QueueName, false, consumer);
         }
 
         public void Commit(object sender)
@@ -52,11 +51,19 @@ namespace Consumer
             _channel.BasicReject((ulong)sender, true);
         }
 
-        public event EventHandler<byte[]> OnMessageReceived;
+        public event EventHandler<TransportMessage> OnMessageReceived;
+        public Type GetType(string topic)
+        {
+            return _types[topic];
+        }
 
         private void OnConsumerReceived(object sender, BasicDeliverEventArgs e)
         {
-            OnMessageReceived?.Invoke(e.DeliveryTag, e.Body.ToArray());
+            OnMessageReceived?.Invoke(e.DeliveryTag, new TransportMessage()
+            {
+                BodyBytes = e.Body.ToArray(),
+                Topic     = e.RoutingKey
+            });
         }
     }
 }

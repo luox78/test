@@ -4,6 +4,6 @@ namespace Shared
 {
     public interface IProducer
     {
-        Task SendAsync(byte[] message);
+        Task SendAsync(TransportMessage message);
     }
 }
